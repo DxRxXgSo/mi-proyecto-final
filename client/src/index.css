@@ -1,0 +1,30 @@
+/* Paleta de colores Pastel */
+:root {
+  --pastel-blue: #d0e7ff;
+  --pastel-pink: #ffdce5;
+  --pastel-purple: #e2d1f9;
+  --pastel-text: #4a4a4a;
+}
+
+body {
+  background-color: #fcfcfc;
+  color: var-(--pastel-text);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Botones con tonos pastel */
+.btn-pastel-blue {
+  background-color: var(--pastel-blue);
+  border: none;
+  color: #5a7fa3;
+  transition: all 0.3s ease;
+}
+
+.btn-pastel-blue:hover {
+  background-color: #bbd9f7;
+  transform: translateY(-2px);
+}
+
+.navbar-pastel {
+  background-color: var(--pastel-purple) !important;
+}

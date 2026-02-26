@@ -1,0 +1,13 @@
+# Dependencias de ambas carpetas
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Seguridad (Archivos secretos)
+.env
+client/.env
+server/.env
+
+# Carpetas de producción
+client/dist/
+client/build/

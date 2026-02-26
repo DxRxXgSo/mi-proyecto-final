@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 export default function AdminContactos() {
   const [contactos, setContactos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(''); // Estado para la búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; 
+
+  // --- DETECTA AUTOMÁTICAMENTE LA API (Local o Producción) ---
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const [editData, setEditData] = useState({
     id: '', nombre: '', email: '', telefono: '', fecha_nacimiento: '', mensaje: ''
@@ -14,7 +17,7 @@ export default function AdminContactos() {
 
   const fetchContactos = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/contacto');
+      const res = await fetch(`${API_URL}/api/contacto`); // Corregido a URL dinámica
       const data = await res.json();
       setContactos(data);
     } catch (error) {
@@ -26,13 +29,11 @@ export default function AdminContactos() {
 
   useEffect(() => { fetchContactos(); }, []);
 
-  // --- LÓGICA DE BÚSQUEDA ---
   const filteredContactos = contactos.filter(c => 
     c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
     c.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- LÓGICA DE PAGINACIÓN SOBRE RESULTADOS FILTRADOS ---
   const totalPages = Math.ceil(filteredContactos.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -51,7 +52,6 @@ export default function AdminContactos() {
     if (pageNumber >= 1 && pageNumber <= totalPages) setCurrentPage(pageNumber);
   };
 
-  // Resetear a la página 1 cuando se busca algo nuevo
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -64,8 +64,6 @@ export default function AdminContactos() {
       const modalElement = document.getElementById('modalEditar');
       const modalInstance = new window.bootstrap.Modal(modalElement);
       modalInstance.show();
-    } else {
-      console.error("Bootstrap JS no detectado. Revisa tu index.html");
     }
   };
 
@@ -86,7 +84,7 @@ export default function AdminContactos() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/contacto/${editData.id}`, {
+      const res = await fetch(`${API_URL}/api/contacto/${editData.id}`, { // Corregido
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData),
@@ -104,7 +102,7 @@ export default function AdminContactos() {
 
   const eliminarContacto = async (id) => {
     if (!confirm('¿Seguro que quieres borrar este mensaje?')) return;
-    await fetch(`http://localhost:5000/api/contacto/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/contacto/${id}`, { method: 'DELETE' }); // Corregido
     fetchContactos();
   };
 
@@ -114,8 +112,6 @@ export default function AdminContactos() {
     <div className="container py-5">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <h2 className="fw-bold text-primary mb-0">Panel de Administración</h2>
-        
-        {/* BUSCADOR */}
         <div className="position-relative" style={{ minWidth: '300px' }}>
           <input 
             type="text" 
@@ -157,7 +153,7 @@ export default function AdminContactos() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-muted">No se encontraron resultados para "{searchTerm}"</td>
+                  <td colSpan="6" className="text-center py-4 text-muted">No se encontraron resultados</td>
                 </tr>
               )}
             </tbody>
@@ -165,7 +161,6 @@ export default function AdminContactos() {
         </div>
       </div>
 
-      {/* CONTROLES DE PAGINACIÓN DINÁMICA */}
       {totalPages > 1 && (
         <nav>
           <ul className="pagination justify-content-center">

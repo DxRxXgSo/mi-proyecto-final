@@ -7,16 +7,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000; 
 
-// --- CONFIGURACIÓN DE CORS (Para permitir Vercel) ---
+// --- CONFIGURACIÓN DE CORS ---
 const allowedOrigins = [
-  'http://localhost:5173', // Tu entorno local de Vite
-  'https://mi-proyecto-final-ashy.vercel.app' // ⚠️ REEMPLAZA ESTO CON TU URL DE VERCEL CUANDO LA TENGAS
+  'http://localhost:5173', 
+  'https://mi-proyecto-final-ashy.vercel.app' 
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite peticiones sin origen (como herramientas de prueba o apps móviles) 
-    // o si el origen está en la lista blanca
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -29,7 +27,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// --- CONFIGURACIÓN DE POSTGRESQL (Render) ---
+// --- CONFIGURACIÓN DE POSTGRESQL ---
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -52,8 +50,21 @@ cloudinary.config({
 });
 
 // ==========================================
-// 1. RUTA PARA LA VISTA "HOME"
+// 1. RUTAS PARA LA VISTA "HOME" (VISITANTES)
 // ==========================================
+
+// --- NUEVO: Obtener los últimos 10 visitantes ---
+app.get('/api/visitantes', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM visitantes_home ORDER BY fecha_visita DESC LIMIT 10');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener visitantes:', error);
+    res.status(500).json({ error: 'Error al consultar visitantes' });
+  }
+});
+
+// --- Guardar nuevo visitante ---
 app.post('/api/visitantes', async (req, res) => {
   const { nombre } = req.body;
   if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
@@ -104,11 +115,8 @@ app.delete('/api/imagenes', async (req, res) => {
 // 3. CRUD: RUTAS PARA "CONTACTOS"
 // ==========================================
 
-// --- CREATE ---
 app.post('/api/contacto', async (req, res) => {
-  // CORREGIDO: Usamos fecha_nacimiento para ser consistentes con la DB y el PUT
   const { nombre, email, telefono, fecha_nacimiento, mensaje, captchaToken } = req.body;
-
   if (!captchaToken) return res.status(400).json({ error: 'Captcha requerido' });
 
   try {
@@ -125,12 +133,10 @@ app.post('/api/contacto', async (req, res) => {
       res.status(400).json({ error: 'Validación de Captcha fallida' });
     }
   } catch (error) {
-    console.error('Error en contacto:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-// --- READ ---
 app.get('/api/contacto', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM contactos ORDER BY id DESC');
@@ -140,7 +146,6 @@ app.get('/api/contacto', async (req, res) => {
   }
 });
 
-// --- UPDATE ---
 app.put('/api/contacto/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre, email, telefono, fecha_nacimiento, mensaje } = req.body;
@@ -153,7 +158,6 @@ app.put('/api/contacto/:id', async (req, res) => {
   }
 });
 
-// --- DELETE ---
 app.delete('/api/contacto/:id', async (req, res) => {
   const { id } = req.params;
   try {
